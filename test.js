@@ -40,6 +40,20 @@ async function getAllProducts(baseUrl, consumerKey, consumerSecret,table, perPag
   return products;
 }
 
+async function  SearchBy(nombre, array , searchby,parentId=0)
+{
+
+        parentId=0;
+     //busca los que tienen el parient 0 de ahi buscar  subcategorias hasta el hijso mas chico
+
+     const parents=array.filter(element=> element.name==nombre );
+         
+
+
+
+
+}
+
 // Uso del código
 (async () => {
   const baseUrl = 'https://janadigital.com.mx/';
@@ -56,9 +70,18 @@ async function getAllProducts(baseUrl, consumerKey, consumerSecret,table, perPag
   const allTags = await getAllProducts(baseUrl, consumerKey, consumerSecret,table2);
   console.log(`Total etiquetas obtenidos: ${allTags.length}`);
 
-  allProducts.forEach(product => {
+  /*allProducts.forEach(product => {
     
     console.log(product.categories);
+  });*/
+
+  //buscar  categoria por nombre
+
+  const phones=allProducts.filter(product=>product.name=='POCO-M2045')
+
+  phones.forEach(phone => {
+    console.log(phone.id);
+    
   });
 
  
