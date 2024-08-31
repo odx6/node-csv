@@ -8,8 +8,8 @@ const path = require('path');
 const app = express();
 const WooCommerce = new WooCommerceRestApi({
   url: 'https://janadigital.com.mx/', // Your store URL
-  consumerKey: 'ck_1c412e9273036147294f84afc40a5470e323235c', // Your consumer key
-  consumerSecret: 'cs_e0b80624365bc7961a5135d80531fcb647b203f4', // Your consumer secret
+  consumerKey: '', // Your consumer key
+  consumerSecret: '', // Your consumer secret
   version: 'wc/v3' // WooCommerce WP REST API version
 });
 module.exports=WooCommerce;
