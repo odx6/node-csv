@@ -53,7 +53,44 @@ async function  SearchBy(nombre, array , searchby,parentId=0)
 
 
 }
+async function arraCategories(string, wc) {
+  const allCat = [];
+  const listCategories = string.split(",");
+  for (const cat of listCategories) {
+      const catArray = cat.split(">").map(c => c.trim());
+      const id = await findCategoryId2(catArray, 0, wc);
+      if (id !== 0) {
+          allCat.push({ id: id });
+      }
+  }
+  return allCat;
+}
+function buscarenstrclass(objetos, r) {
+  return objetos.filter(obj => obj.parent === r);
+}
 
+async function findCategoryId2(categories, parentId = 0, allCat) {
+  let currentParentId = parentId;
+
+  for (const categoryName of categories) {
+      const subcategories = buscarenstrclass(allCat, currentParentId);
+
+      let found = false;
+      for (const subcategory of subcategories) {
+          if (subcategory.name === categoryName) {
+              currentParentId = subcategory.id;
+              found = true;
+              break;
+          }
+      }
+
+      if (!found) {
+          return null;
+      }
+  }
+
+  return currentParentId;
+}
 // Uso del código
 (async () => {
   const baseUrl = 'https://janadigital.com.mx/';
@@ -69,22 +106,21 @@ async function  SearchBy(nombre, array , searchby,parentId=0)
   const table2 = 'products/tags';
   const allTags = await getAllProducts(baseUrl, consumerKey, consumerSecret,table2);
   console.log(`Total etiquetas obtenidos: ${allTags.length}`);
+  //recibimos todas las categorias y empezamos con el parentId=0
 
-  /*allProducts.forEach(product => {
-    
-    console.log(product.categories);
-  });*/
-
-  //buscar  categoria por nombre
-
-  const phones=allProducts.filter(product=>product.name=='POCO-M2045')
-
-  phones.forEach(phone => {
-    console.log(phone.id);
-    
-  });
-
+  const nombre='Ropa';
+  const parent=0;
  
+  const categories=allCategories.filter(categorie=>{
+
+  return  categorie.name==nombre && categorie.parent==parent;
+
+  })
+
+  categories.forEach(categorie=>{
+    console.log(categorie.id)
+  })
+
 
 })();
 
