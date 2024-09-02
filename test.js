@@ -15,7 +15,7 @@ async function fetchProducts(url, auth, params) {
   }
 }
 
-async function getAllProducts(baseUrl, consumerKey, consumerSecret,table, perPage = 100) {
+async function getAllProducts(baseUrl, consumerKey, consumerSecret, table, perPage = 100) {
   const url = `${baseUrl}/wp-json/wc/v3/${table}`;
   const auth = {
     username: consumerKey,
@@ -40,14 +40,13 @@ async function getAllProducts(baseUrl, consumerKey, consumerSecret,table, perPag
   return products;
 }
 
-async function  SearchBy(nombre, array , searchby,parentId=0)
-{
+async function SearchBy(nombre, array, searchby, parentId = 0) {
 
-        parentId=0;
-     //busca los que tienen el parient 0 de ahi buscar  subcategorias hasta el hijso mas chico
+  parentId = 0;
+  //busca los que tienen el parient 0 de ahi buscar  subcategorias hasta el hijso mas chico
 
-     const parents=array.filter(element=> element.name==nombre );
-         
+  const parents = array.filter(element => element.name == nombre);
+
 
 
 
@@ -57,11 +56,11 @@ async function arraCategories(string, wc) {
   const allCat = [];
   const listCategories = string.split(",");
   for (const cat of listCategories) {
-      const catArray = cat.split(">").map(c => c.trim());
-      const id = await findCategoryId2(catArray, 0, wc);
-      if (id !== 0) {
-          allCat.push({ id: id });
-      }
+    const catArray = cat.split(">").map(c => c.trim());
+    const id = await searchby(catArray, 0, wc);
+    if (id !== 0) {
+      allCat.push({ id: id });
+    }
   }
   return allCat;
 }
@@ -73,59 +72,82 @@ async function findCategoryId2(categories, parentId = 0, allCat) {
   let currentParentId = parentId;
 
   for (const categoryName of categories) {
-      const subcategories = buscarenstrclass(allCat, currentParentId);
+    const subcategories = buscarenstrclass(allCat, currentParentId);
 
-      let found = false;
-      for (const subcategory of subcategories) {
-          if (subcategory.name === categoryName) {
-              currentParentId = subcategory.id;
-              found = true;
-              break;
-          }
+    let found = false;
+    for (const subcategory of subcategories) {
+      if (subcategory.name === categoryName) {
+        currentParentId = subcategory.id;
+        found = true;
+        break;
       }
+    }
 
-      if (!found) {
-          return null;
-      }
+    if (!found) {
+      return null;
+    }
   }
 
   return currentParentId;
 }
-// Uso del código
-(async () => {
-  const baseUrl = 'https://janadigital.com.mx/';
-  const consumerKey = '';
-  const consumerSecret = '';
-  const table = 'products';
-
-  const allProducts = await getAllProducts(baseUrl, consumerKey, consumerSecret,table);
-  console.log(`Total productos obtenidos: ${allProducts.length}`);
-  const table1 = 'products/categories';
-  const allCategories = await getAllProducts(baseUrl, consumerKey, consumerSecret,table1);
-  console.log(`Total categories obtenidos: ${allCategories.length}`);
-  const table2 = 'products/tags';
-  const allTags = await getAllProducts(baseUrl, consumerKey, consumerSecret,table2);
-  console.log(`Total etiquetas obtenidos: ${allTags.length}`);
-  //recibimos todas las categorias y empezamos con el parentId=0
-
-  const nombre='Ropa';
-  const parent=0;
- 
-  const categories=allCategories.filter(categorie=>{
-
-  return  categorie.name==nombre && categorie.parent==parent;
-
-  })
-
-  categories.forEach(categorie=>{
-    console.log(categorie.id)
-  })
 
 
-})();
+async function BuscarID(String, categories) {
+  const StringArray = String.split('>');
+  parentId = 0;
+  let contador = 0;
+   let categoria;
+  if (StringArray.length > 0) {
+    while (contador < StringArray.length) {
+      console.log(StringArray.at(contador))
+     categoria= categories.filter((categorie) => {
+
+        if (categorie.name == StringArray.at(contador) && categorie.parent == parentId) {
+          parentId=categorie.id;
+        return  categorie.name == StringArray.at(contador) && categorie.parent == parentId;
+
+        }
+
+
+      })
+      contador++;
+
+
+    }
+
+
+  }
+  return parentId;
+}
+  // Uso del código
+  (async () => {
+    const baseUrl = 'https://janadigital.com.mx/';
+    const consumerKey = '';
+    const consumerSecret = '';
+    const table = 'products';
+
+    const allProducts = await getAllProducts(baseUrl, consumerKey, consumerSecret, table);
+    console.log(`Total productos obtenidos: ${allProducts.length}`);
+    const table1 = 'products/categories';
+    const allCategories = await getAllProducts(baseUrl, consumerKey, consumerSecret, table1);
+    console.log(`Total categories obtenidos: ${allCategories.length}`);
+    const table2 = 'products/tags';
+    const allTags = await getAllProducts(baseUrl, consumerKey, consumerSecret, table2);
+    console.log(`Total etiquetas obtenidos: ${allTags.length}`);
+    //recibimos todas las categorias y empezamos con el parentId=0
+
+
+    const nombre = 'Ropa';
+
+    const resultado=await BuscarID(nombre,allCategories);
 
 
 
-app.listen(port, () => {
+    console.log(resultado);
+  })();
+
+
+
+  app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
   });
