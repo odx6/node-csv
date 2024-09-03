@@ -33,7 +33,11 @@ app.post('/upload', upload.single('file'), (req, res) => {
     .on('end', () => {
       fs.unlinkSync(req.file.path); // Eliminar el archivo después de la lectura
       res.render('display', { data: results });
+     // console.log(results);
+      
     });
+
+    
 });
 
 app.listen(port, () => {

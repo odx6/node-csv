@@ -2,6 +2,9 @@ const axios = require('axios');
 const express = require('express');
 const app = express();
 const port = 3000;
+
+
+ console.log(__dirname);
 async function fetchProducts(url, auth, params) {
   try {
     const response = await axios.get(url, {
@@ -119,6 +122,21 @@ async function BuscarID(String, categories) {
   }
   return parentId;
 }
+
+//funcion Buscar Tags
+async function SearchTags(nombre , Tags) {
+   let TagId=0;
+   Tags.filter((Tag)=>{
+    if(Tag.name==nombre){
+    TagId=Tag.id;
+      return Tag.name==nombre;
+    }
+
+
+   });
+  return TagId;
+  
+}
   // Uso del código
   (async () => {
     const baseUrl = 'https://janadigital.com.mx/';
@@ -140,14 +158,13 @@ async function BuscarID(String, categories) {
     const nombre = 'Ropa';
 
     const resultado=await BuscarID(nombre,allCategories);
-
-
-
     console.log(resultado);
+    const  Tagtest='Flores';
+    const Tag= await SearchTags(Tagtest,allTags);
+
+    console.log('la etiqueta es :'+Tag);
   })();
 
 
 
-  app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
-  });
+ 
