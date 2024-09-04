@@ -4,7 +4,7 @@ const app = express();
 const port = 3000;
 
 
- console.log(__dirname);
+
 async function fetchProducts(url, auth, params) {
   try {
     const response = await axios.get(url, {
@@ -140,8 +140,8 @@ async function SearchTags(nombre , Tags) {
   // Uso del código
   (async () => {
     const baseUrl = 'https://janadigital.com.mx/';
-    const consumerKey = '';
-    const consumerSecret = '';
+    const consumerKey = 'ck_1c412e9273036147294f84afc40a5470e323235c';
+    const consumerSecret = 'cs_e0b80624365bc7961a5135d80531fcb647b203f4';
     const table = 'products';
 
     const allProducts = await getAllProducts(baseUrl, consumerKey, consumerSecret, table);
