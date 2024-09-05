@@ -154,7 +154,7 @@ async function SearchTags(nombre , Tags) {
     console.log(`Total etiquetas obtenidos: ${allTags.length}`);
     //recibimos todas las categorias y empezamos con el parentId=0
 
-
+ 
     const nombre = 'Ropa';
 
     const resultado=await BuscarID(nombre,allCategories);
@@ -163,6 +163,7 @@ async function SearchTags(nombre , Tags) {
     const Tag= await SearchTags(Tagtest,allTags);
 
     console.log('la etiqueta es :'+Tag);
+    console.log(allTags);
   })();
 
 

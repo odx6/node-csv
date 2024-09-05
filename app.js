@@ -4,10 +4,16 @@ const csv = require('csv-parser');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-
+const WooCommerceRestApi = require("@woocommerce/woocommerce-rest-api").default;
 const app = express();
 const port = 3000;
 
+const WooCommerce = new WooCommerceRestApi({
+  url: 'https://janadigital.com.mx/', // Your store URL
+  consumerKey: 'ck_1c412e9273036147294f84afc40a5470e323235c', // Your consumer key
+  consumerSecret: 'cs_e0b80624365bc7961a5135d80531fcb647b203f4', // Your consumer secret
+  version: 'wc/v3' // WooCommerce WP REST API version
+});
 
 async function fetchProducts(url, auth, params) {
   try {
@@ -21,6 +27,52 @@ async function fetchProducts(url, auth, params) {
     return [];
   }
 }
+
+async function Actualizar(allProducts,data) {
+  let update=[];
+  let create=[];
+
+
+  for(const dato of data){
+    
+     let  resultado=await Buscar(allProducts,dato.sku);
+
+     if(resultado !== 0){
+      dato.id=resultado;
+      update.push(dato);
+     }else{
+      create.push(dato)
+
+     }
+
+   
+
+  }
+
+   
+  WooCommerce.put("products/batch", data)
+  .then((response) => {
+    console.log(response.data);
+  })
+  .catch((error) => {
+    console.log(error.response.data);
+  });
+  return {update,create}
+}
+
+
+ async function Buscar(allProducts,skuSearch) {
+   id=0;
+   allProducts.filter(producto=>{
+
+    if(producto.sku==skuSearch){
+         id=producto.id
+    }
+    
+   })
+   return id;
+   
+ }
 
 async function getAllProducts(baseUrl, consumerKey, consumerSecret, table, perPage = 100) {
   const url = `${baseUrl}/wp-json/wc/v3/${table}`;
@@ -46,58 +98,6 @@ async function getAllProducts(baseUrl, consumerKey, consumerSecret, table, perPa
 
   return products;
 }
-
-async function SearchBy(nombre, array, searchby, parentId = 0) {
-
-  parentId = 0;
-  //busca los que tienen el parient 0 de ahi buscar  subcategorias hasta el hijso mas chico
-
-  const parents = array.filter(element => element.name == nombre);
-
-
-
-
-
-}
-async function arraCategories(string, wc) {
-  const allCat = [];
-  const listCategories = string.split(",");
-  for (const cat of listCategories) {
-    const catArray = cat.split(">").map(c => c.trim());
-    const id = await searchby(catArray, 0, wc);
-    if (id !== 0) {
-      allCat.push({ id: id });
-    }
-  }
-  return allCat;
-}
-function buscarenstrclass(objetos, r) {
-  return objetos.filter(obj => obj.parent === r);
-}
-
-async function findCategoryId2(categories, parentId = 0, allCat) {
-  let currentParentId = parentId;
-
-  for (const categoryName of categories) {
-    const subcategories = buscarenstrclass(allCat, currentParentId);
-
-    let found = false;
-    for (const subcategory of subcategories) {
-      if (subcategory.name === categoryName) {
-        currentParentId = subcategory.id;
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      return null;
-    }
-  }
-
-  return currentParentId;
-}
-
 
 async function BuscarID(String, categories) {
   const StringArray = String.split('>');
@@ -183,25 +183,95 @@ async function ArrayTags(String, allTags) {
 
   }
 
- return arrayTags;
+  return arrayTags;
 
 
 }
 async function arrayImages(String) {
-  const images=String.split(',');
-  let arrayImages=[];
-  
-  if(images.length>0){
-    images.forEach(image =>{
-      arrayImages.push({src:image})
+  const images = String.split(',');
+  let arrayImages = [];
+
+  if (images.length > 0) {
+    images.forEach(image => {
+      arrayImages.push({ src: image })
     })
-  
+
 
   }
   return arrayImages;
-  
-}
 
+}
+async function ProcesarDatos(datos,AllCategories, allTags) {
+   let newDatos=[];
+  for (const dato of datos) {
+    dato['dimension'] = {
+      'length': dato.length,
+      'width': dato.width,
+      'height': dato.height,
+    }
+    dato['categories']=await ArrayCategories(dato.categories,AllCategories);
+    dato['tags']=await ArrayTags(dato.tags, allTags);
+    dato['images']=await arrayImages(dato.images);
+    attributes=dato.Attribute_1_value.split(',')
+    dato['attributes']=[{
+
+      name: dato.Attribute_1_name,
+      position: dato.Position,
+      visible: true,
+      variation: true,
+      options: attributes
+       
+      
+    }]
+    delete dato['new'];
+    delete dato['length'];
+    delete dato['width'];
+    delete dato['height'];
+    delete dato['meta_data'];
+    delete dato['default_attributes'];
+    delete dato['Attribute_1_name'];
+    delete dato['Attribute_1_value'];
+    delete dato['Position'];
+    delete dato['button_text'];
+    
+    delete dato['backorders_allowed'];
+    delete dato['cross_sell_ids'];
+    delete dato['upsell_ids'];
+    delete dato['parent_id'];
+
+
+    newDatos.push(dato);
+  }
+return newDatos;
+
+}
+async function getAttribute(nombre, allAtributes){
+
+  allAtributes.filter(elemento=>{
+
+    return elemento.name==nombre;
+  })
+
+
+
+}
+async function getAllAtributtes(baseUrl,consumerKey,consumerSecret) {
+
+  const url=`${baseUrl}/wp-json/wc/v3/products/attributes`
+  const auth={
+    username:consumerKey,
+    password:consumerSecret
+  };
+  try {
+    const response = await axios.get(url, {
+      auth: auth
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching products: ${error}`);
+    return [];
+  }
+}
 
 
 // Configuración de multer para manejar la carga de archivos
@@ -235,7 +305,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
 
       (async () => {
 
-        
+
         const baseUrl = 'https://janadigital.com.mx/';
         const consumerKey = 'ck_1c412e9273036147294f84afc40a5470e323235c';
         const consumerSecret = 'cs_e0b80624365bc7961a5135d80531fcb647b203f4';
@@ -249,46 +319,34 @@ app.post('/upload', upload.single('file'), (req, res) => {
         const table2 = 'products/tags';
         const allTags = await getAllProducts(baseUrl, consumerKey, consumerSecret, table2);
         console.log(`Total etiquetas obtenidos: ${allTags.length}`);
-        //recibimos todas las categorias y empezamos con el parentId=0
-/*
-
-        const nombre = 'Ropa>Camisas>Grande,Ropa>Camisas>Grande';
-
-        const resultado = await ArrayCategories(nombre, allCategories);
-        console.log(resultado);
-        const Tagtest = 'Flores,Promocion,Puntos 10,Promocion;Ventas de Agosto';
-        const Tag = await ArrayTags(Tagtest, allTags);
-
-        console.log(Tag);
-        const imagenesPrueba='https://janadigital.com.mx/wp-content/uploads/2024/08/blog-2-100x100.jpg,https://janadigital.com.mx/wp-content/uploads/2024/08/blog-2-100x100.jpg'
-         const arrayIma=await arrayImages(imagenesPrueba);
-         console.log(arrayIma);*/
+        
+        const allAttributes= await getAllAtributtes(baseUrl,consumerKey,consumerSecret)
+        console.log(`Total attributos recuperados:${allAttributes.length}`);
+        const nombre='Motorola';
+        /*const attributo=await getAttribute(nombre,allAttributes);
+        console.log(attributo)*/
+        
+       // console.log(atributo);
+        
         contador = 0;
-        results.forEach(productos => {
+        //console.log(allProducts);
+       const datos  =await ProcesarDatos(results,allCategories,allTags);
+       const producto= await Actualizar(allProducts,datos);
+        console.log(producto.update);
+       // console.log(producto.create);
+      
+      
+       //console.log(datos)
+      /* datos.forEach(productos=>{
 
-          productos['dimension'] = {
-            'length': productos.length,
-            'width': productos.width,
-            'height': productos.height,
-          }
-          
-          ArrayCategories(productos.categories, allCategories).then(response=>{
-            productos['categories']=response;
-            console.log(productos)
-          }).catch(response=>{
-
-            console.log(response)
-          })
-
-         
-
-        })
+        console.log(productos);
+  
+       })*/
 
       })();
 
 
-      // console.log(results);
-      
+     
 
     });
 
