@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Cargando</title>
+    <style>
+        /* Estilo del símbolo de carga */
+        .loader {
+            border: 16px solid #f3f3f3; /* Fondo */
+            border-radius: 50%;
+            border-top: 16px solid #3498db; /* Color de la parte superior */
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+            margin: 100px auto;
+        }
+
+        /* Animación del giro */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Centrar el texto y el símbolo de carga */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <span>  Espere mientras se cargan todos los datos </span></h1>
+</body>
+</html>
