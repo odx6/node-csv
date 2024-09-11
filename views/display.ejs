@@ -10,7 +10,7 @@
     <table border="1">
 
         <span id="Contador">0</span>
-       <!--- <thead>
+        <thead>
             <tr>
                 <% if (data.length > 0) { %>
                     <% Object.keys(data[0]).forEach(key => { %>
@@ -20,15 +20,16 @@
             </tr>
         </thead>
         <tbody>
-            <% data.forEach(row => { %>
+            <% data.forEach((row,indice)=> { %>
                 <tr>
+                    <td><%=indice%></td>
                     <% Object.values(row).forEach(value => { %>
                         <td><%= value %></td>
                     <% }); %>
                 </tr>
             <% }); %>
         </tbody>
-    </table>-->
+    </table>
     <a href="/">Upload another CSV</a>
     
 </body>
