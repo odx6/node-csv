@@ -3,6 +3,7 @@
     "@woocommerce/woocommerce-rest-api": "^1.0.1",
     "axios": "^1.7.6",
     "csv-parser": "^3.0.0",
+    "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "lodash": "^4.17.21",

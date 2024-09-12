@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const port = 3000;
 
+require('dotenv').config();
 
 
 async function fetchProducts(url, auth, params) {
@@ -139,9 +140,9 @@ async function SearchTags(nombre , Tags) {
 }
   // Uso del código
   (async () => {
-    const baseUrl = 'https://janadigital.com.mx/';
-    const consumerKey = 'ck_1c412e9273036147294f84afc40a5470e323235c';
-    const consumerSecret = 'cs_e0b80624365bc7961a5135d80531fcb647b203f4';
+    const baseUrl = process.env. URL;
+    const consumerKey = process.env.CONSUMER_KEY;
+    const consumerSecret = process.env.CONSUMER_SECRET;
     const table = 'products';
 
     const allProducts = await getAllProducts(baseUrl, consumerKey, consumerSecret, table);

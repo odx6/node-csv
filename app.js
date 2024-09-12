@@ -8,13 +8,14 @@ const _ = require('lodash');
 const WooCommerceRestApi = require("@woocommerce/woocommerce-rest-api").default;
 const app = express();
 const port = 3000;
+require('dotenv').config();
 
 const WooCommerce = new WooCommerceRestApi({
-  url: 'https://janadigital.com.mx/', // Your store URL
-  consumerKey: 'ck_1c412e9273036147294f84afc40a5470e323235c', // Your consumer key
-  consumerSecret: 'cs_e0b80624365bc7961a5135d80531fcb647b203f4', // Your consumer secret
+  url: process.env.URL, // Your store URL
+  consumerKey: process.env.CONSUMER_KEY, // Your consumer key
+  consumerSecret:  process.env.CONSUMER_SECRET, // Your consumer secret
   version: 'wc/v3', // WooCommerce WP REST API version
-  timeout:120000
+ 
 });
 
 async function fetchProducts(url, auth, params) {
@@ -66,13 +67,6 @@ async function Actualizar(allProducts, data) {
   }
 
 
-  /*WooCommerce.put("products/batch", data)
-    .then((response) => {
-      console.log(response.data);
-    })
-    .catch((error) => {
-      console.log(error.response.data);
-    });*/
   return { update, create }
 }
 
@@ -82,9 +76,9 @@ async function Buscar(allProducts, skuSearch) {
 
   /*const producto = allProducts.filter(producto => producto.sku === skuSearch)
   return producto;*/
-  let producto=allProducts.filter(producto=>producto.sku== skuSearch)
-  if(producto.length >0 && producto.length<2){
-     id=producto[0].id;
+  let producto = allProducts.filter(producto => producto.sku == skuSearch)
+  if (producto.length > 0 && producto.length < 2) {
+    id = producto[0].id;
 
   }
   return id;
@@ -104,7 +98,7 @@ async function getAllProducts(baseUrl, consumerKey, consumerSecret, table, perPa
     const params = {
       per_page: perPage,
       page: page,
-      orderby:'id',
+      orderby: 'id',
     };
     const response = await fetchProducts(url, auth, params);
     if (response.length === 0) {
@@ -290,7 +284,18 @@ async function getAllAtributtes(baseUrl, consumerKey, consumerSecret) {
     return [];
   }
 }
-
+async function UpdateData(array, WooCommerce) {
+  try {
+    const response = await WooCommerce.post("products/batch", { update: array });
+    // Si llega aquí, la petición fue exitosa
+    //console.log("Actualización correcta", response);
+    return "Correcto"; // Puedes devolver un valor para indicar que fue exitoso
+  } catch (error) {
+    // Si entra aquí, hubo un error en la petición
+    //console.error("Error de actualización", error);
+    return "Error"; // Puedes devolver un valor para indicar que hubo un error
+  }
+}
 
 // Configuración de multer para manejar la carga de archivos
 const upload = multer({ dest: 'uploads/' });
@@ -322,16 +327,19 @@ app.post('/upload', upload.single('file'), (req, res) => {
 
 
       (async () => {
+       
 
-
-        const baseUrl = 'https://janadigital.com.mx/';
-        const consumerKey = 'ck_1c412e9273036147294f84afc40a5470e323235c';
-        const consumerSecret = 'cs_e0b80624365bc7961a5135d80531fcb647b203f4';
+        const baseUrl = process.env.URL;
+        console.log(baseUrl);
+        const consumerKey = process.env.CONSUMER_KEY;
+        console.log(consumerKey);
+        const consumerSecret =process.env.CONSUMER_SECRET;
+        console.log(consumerSecret);
         const table = 'products';
 
         const allProducts = await getAllProducts(baseUrl, consumerKey, consumerSecret, table);
         console.log(`Total productos obtenidos: ${allProducts.length}`);
-       
+
         const table1 = 'products/categories';
         const allCategories = await getAllProducts(baseUrl, consumerKey, consumerSecret, table1);
         console.log(`Total categories obtenidos: ${allCategories.length}`);
@@ -342,103 +350,34 @@ app.post('/upload', upload.single('file'), (req, res) => {
         const allAttributes = await getAllAtributtes(baseUrl, consumerKey, consumerSecret)
         console.log(`Total attributos recuperados:${allAttributes.length}`);
         const nombre = 'Motorola';
-     
-        contador = 0;
-        //console.log(allProducts);
+
+       
+        
         const datos = await ProcesarDatos(results, allCategories, allTags);
 
 
-         const producto = await Actualizar(allProducts, datos);
-          console.log(producto.update.length)
-          console.log(producto.create.length)
-  
-          const Update = _.chunk(producto.update, 100);
-  
-          console.log(Update.length);
-          const Create = _.chunk(producto.create, 1);
-          producto.update.forEach((element,indice) => {
+        const producto = await Actualizar(allProducts, datos);
+        console.log(producto.update.length)
+        console.log(producto.create.length)
 
-            console.log(indice)
-            console.log(element)
-            
-          });
-       
-        /*const promises = Update.map((arreglo, indice) =>
-          WooCommerce.post("products/batch", { update: arreglo })
-            .then(response => {
-              console.log(`Entro: ${indice},`);
-             // console.log(response.data)
-             
-              //console.log(response.create.error)
-            })
-            .catch(response => {
-             
-             // console.log(response);
-              console.log(`Error de actualización: ${indice} ${response},`);
-            })
-        );
+        const Update = _.chunk(producto.update, 10);
 
-        await Promise.all(promises);*/
+        console.log(Update.length);
+        const Create = _.chunk(producto.create, 1);
+        let indice=0;
+        for (const array of Update) {
+          let  resultado= await UpdateData(array,WooCommerce);
+          console.log(`Error: ${indice},${resultado}`)
+          indice++;
 
+        }
 
-
-        /* Update.forEach((arreglo,indice)=>{
+        
       
-        
-            WooCommerce.post("products/batch",{update:arreglo})
-            .then((response) => { 
-              
-              console.log(`entro: ${indice},` )
-              //console.log(response.data);
-              //console.log(response);
-            })
-            .catch((error) => {
-              console.log('')
-              console.log(`error de actualizacion: ${indice},` )
-              //console.log(error);
-            });
-  
-  
-          });
-        
-  
-         /* Create.forEach((creacion,indice)=>{
-  
-        
-            WooCommerce.post("products/batch",{create:creacion})
-            .then((response,) => { 
-              contador++
-              console.log(`creacion: ${indice},` )
-              console.log(response.data);
-              console.log(response.error);
-              //console.log(response);
-            })
-            .catch((error) => {
-              
-              console.log(`error de crecion: ${indice},` )
-              console.log(error.data);
-            });
-  
-  
-          });
-        
-          
-          
-          
-  
-          // console.log(producto.create);
-  
-  
-          //console.log(datos)
-          /* datos.forEach(productos=>{
-    
-            console.log(productos);
-      
-           })*/
 
       })();
 
-    
+
 
 
     });
