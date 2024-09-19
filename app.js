@@ -4,7 +4,9 @@ const csv = require('csv-parser');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const util = require('util');
 const _ = require('lodash');
+const sleep=util.promisify(setTimeout)
 const WooCommerceRestApi = require("@woocommerce/woocommerce-rest-api").default;
 const app = express();
 const port = 3000;
@@ -288,12 +290,28 @@ async function UpdateData(array, WooCommerce) {
   try {
     const response = await WooCommerce.post("products/batch", { update: array });
     // Si llega aquí, la petición fue exitosa
-    //console.log("Actualización correcta", response);
+   // console.log("Actualización correcta", response);
     return "Correcto"; // Puedes devolver un valor para indicar que fue exitoso
-  } catch (error) {
+  } catch (response) {
     // Si entra aquí, hubo un error en la petición
     //console.error("Error de actualización", error);
-    return "Error"; // Puedes devolver un valor para indicar que hubo un error
+
+    console.log(response)
+    return response; // Puedes devolver un valor para indicar que hubo un error
+  }
+}
+async function CreateData(array, WooCommerce) {
+  try {
+    const response = await WooCommerce.post("products/batch", { create: array });
+    // Si llega aquí, la petición fue exitosa
+   // console.log("Actualización correcta", response);
+    return "Correcto"; // Puedes devolver un valor para indicar que fue exitoso
+  } catch (response) {
+    // Si entra aquí, hubo un error en la petición
+    //console.error("Error de actualización", error);
+
+    console.log(response)
+    return response; // Puedes devolver un valor para indicar que hubo un error
   }
 }
 
@@ -320,59 +338,58 @@ app.post('/upload', upload.single('file'), (req, res) => {
     .pipe(csv())
     .on('data', (row) => results.push(row))
     .on('end', () => {
-      fs.unlinkSync(req.file.path); // Eliminar el archivo después de la lectura
+      fs.unlinkSync(req.file.path); // Elimina el archivo para no generar datos 
 
       res.render('display', { data: results });
 
 
 
       (async () => {
-       
-
         const baseUrl = process.env.URL;
-        console.log(baseUrl);
         const consumerKey = process.env.CONSUMER_KEY;
-        console.log(consumerKey);
         const consumerSecret =process.env.CONSUMER_SECRET;
-        console.log(consumerSecret);
         const table = 'products';
-
         const allProducts = await getAllProducts(baseUrl, consumerKey, consumerSecret, table);
         console.log(`Total productos obtenidos: ${allProducts.length}`);
-
         const table1 = 'products/categories';
         const allCategories = await getAllProducts(baseUrl, consumerKey, consumerSecret, table1);
         console.log(`Total categories obtenidos: ${allCategories.length}`);
         const table2 = 'products/tags';
         const allTags = await getAllProducts(baseUrl, consumerKey, consumerSecret, table2);
         console.log(`Total etiquetas obtenidos: ${allTags.length}`);
-
         const allAttributes = await getAllAtributtes(baseUrl, consumerKey, consumerSecret)
         console.log(`Total attributos recuperados:${allAttributes.length}`);
         const nombre = 'Motorola';
-
-       
-        
         const datos = await ProcesarDatos(results, allCategories, allTags);
-
-
         const producto = await Actualizar(allProducts, datos);
         console.log(producto.update.length)
-        console.log(producto.create.length)
-
-        const Update = _.chunk(producto.update, 10);
-
+        //console.log(producto.create.length);
+        const Update = _.chunk(producto.update, 100);
         console.log(Update.length);
-        const Create = _.chunk(producto.create, 1);
+        const Create = _.chunk(producto.create, 100);
+        console.log(Create.length)
         let indice=0;
+    
+
         for (const array of Update) {
           let  resultado= await UpdateData(array,WooCommerce);
-          console.log(`Error: ${indice},${resultado}`)
+          console.log(`Actualizando: ${indice},${resultado}`)
+          await sleep(20000)
           indice++;
 
-        }
+        } 
+        //indice para actualizar productos 
+        console.log("Creando")
+           for(const  array of Create){
+           let resultado=await CreateData(array,WooCommerce);
+           console.log(`Creando: ${indice},${resultado}`)
+           await sleep(
+            40000)
+           indice++;
 
-        
+           }
+         
+      
       
 
       })();
